@@ -2,8 +2,6 @@
 
 Secure Linux VM management on Google Cloud Platform (GCP), Python-based VM inventory automation, and automated testing with GitHub Actions.
 
-![GCP Secure VM CI Architecture](https://github.com/user-attachments/assets/c7a2eb3f-9db2-4620-a6ca-a92ff00a7c5d)
-
 ## 1. Project Overview
 
 This project shows how to create and secure a Linux virtual machine on Compute Engine, give it least-privilege access using IAM, automate VM inventory with Python, and test the code automatically with a CI pipeline.
