@@ -32,7 +32,6 @@ Cloud Scheduler → Cloud Run Jobs API → Cloud Run Job → Docker Container �
 
 Cloud Storage → Object Versioning → Object Generation ID → restore.py → Recovered File
 
-![Backup Recovery Architecture](docs/architecture-recovery.png)
 
 ## 3. Technologies Used
 
