@@ -1,30 +1,44 @@
+
 import logging
+from datetime import datetime, timezone
 from google.cloud import storage
 
-# Configure logging
+# Configure logging for Cloud Logging
 logging.basicConfig(
-    filename="backup.log",
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-try:
-    client = storage.Client()
+BUCKET_NAME = "project-04354dfd-b58a-4510-a66-backup"
+DESTINATION_NAME = "sample.txt"
 
-    BUCKET_NAME = "project-04354dfd-b58a-4510-a66-backup"
-    FILE_PATH = "sample.txt"
-    DESTINATION_NAME = "sample.txt"
-
-    bucket = client.bucket(BUCKET_NAME)
-    blob = bucket.blob(DESTINATION_NAME)
-
+def run_backup():
     logging.info("Backup started")
 
-    blob.upload_from_filename(FILE_PATH)
+    # Connect to Google Cloud Storage
+    client = storage.Client()
+
+    # Select the bucket
+    bucket = client.bucket(BUCKET_NAME)
+
+    # Create timestamped sample backup content
+    timestamp = datetime.now(timezone.utc).isoformat()
+    content = f"GCP automated backup created at {timestamp}\n"
+
+    # Upload the backup
+    blob = bucket.blob(DESTINATION_NAME)
+    blob.upload_from_string(
+        content,
+        content_type="text/plain"
+    )
 
     logging.info("Backup uploaded successfully")
-    print("Backup uploaded successfully!")
+    logging.info("Bucket: %s", BUCKET_NAME)
+    logging.info("Object: %s", DESTINATION_NAME)
 
-except Exception as error:
-    logging.exception("Backup failed")
-    print("Backup failed:", error)
+if __name__ == "__main__":
+    try:
+        run_backup()
+    except Exception:
+        logging.exception("Backup failed")
+        raise
