@@ -477,68 +477,8 @@ The Cloud Scheduler service agent also requires the appropriate service-agent pe
 | Restore failure | Verify the object generation ID |
 | Missing logs | Check resource type and time range in Cloud Logging |
 
-## 10. Project Screenshots
 
-### Cloud Storage and Object Versioning
-
-![Cloud Storage Bucket](screenshots/01-storage-bucket.png)
-
-![Object Versioning](screenshots/03-object-versioning.png)
-
-### Backup and Recovery
-
-![File Recovery](screenshots/04-file-recovery.png)
-
-![Backup Logging](screenshots/05-backup-logging.png)
-
-### Artifact Registry and Cloud Run
-
-![Artifact Registry](screenshots/07-artifact-registry.png)
-
-![Cloud Run Job Execution](screenshots/09-cloud-run-job-success.png)
-
-### Cloud Scheduler and Cloud Logging
-
-![Cloud Scheduler Execution](screenshots/10-cloud-scheduler-success.png)
-
-![Cloud Logging](screenshots/11-cloud-logging.png)
-
-### Backup Object Metadata
-
-![Backup Object Metadata](screenshots/12-backup-object-metadata.png)
-
-## 11. Repository Structure
-
-```text
-01-backup-recovery/
-│
-├── backup.py
-├── restore.py
-├── requirements.txt
-├── Dockerfile
-├── README.md
-├── CLOUD-SCHEDULER.md
-│
-├── docs/
-│   ├── architecture-automated.png
-│   └── architecture-recovery.png
-│
-└── screenshots/
-    ├── 01-storage-bucket.png
-    ├── 02-backup-upload.png
-    ├── 03-object-versioning.png
-    ├── 04-file-recovery.png
-    ├── 05-backup-logging.png
-    ├── 06-github-project-files.png
-    ├── 07-artifact-registry.png
-    ├── 08-docker-build-success.png
-    ├── 09-cloud-run-job-success.png
-    ├── 10-cloud-scheduler-success.png
-    ├── 11-cloud-logging.png
-    └── 12-backup-object-metadata.png
-```
-
-## 12. What I Learned
+## 10. What I Learned
 
 - Creating and configuring GCP resources.
 - Working with Cloud Storage buckets and Object Versioning.
@@ -554,7 +494,7 @@ The Cloud Scheduler service agent also requires the appropriate service-agent pe
 - Monitoring cloud workloads through Cloud Logging.
 - Recovering earlier object generations using Python.
 
-## 13. Future Improvements
+## 11. Future Improvements
 
 - Configure lifecycle rules to remove old noncurrent object versions and control storage costs.
 - Add Cloud Monitoring alert policies for failed backup executions.
@@ -564,7 +504,7 @@ The Cloud Scheduler service agent also requires the appropriate service-agent pe
 - Add configurable backup retention policies.
 - Extend the application to support multiple backup files and directories.
 
-## 14. Cleanup and Cost Management
+## 12. Cleanup and Cost Management
 
 Delete resources after completing the project demonstration.
 
