@@ -14,10 +14,9 @@ The project focuses on:
 
 ## 2. Architecture
 <img width="1752" height="897" alt="GCP Secure VM CI Architecture" src="https://github.com/user-attachments/assets/c7a2eb3f-9db2-4620-a6ca-a92ff00a7c5d" />
-```text
+
  <img width="313" height="865" alt="image" src="https://github.com/user-attachments/assets/d633943a-69fa-401d-a88c-9b7cec1e0e41" />
 
-```
 
 ## 3. Technologies Used
 
@@ -207,10 +206,8 @@ Note: This project implements Continuous Integration (CI). It does not currently
 
 ## 10. Project Structure
 
-```text
 <img width="500" height="559" alt="image" src="https://github.com/user-attachments/assets/26570c4a-bc32-448a-8269-90b8849399dd" />
 
-```
 
 ## 11. Run the Project Locally
 
