@@ -1,154 +1,457 @@
 # GCP Automated Backup and Recovery System
 
-## Project Overview
+## 1. Project Overview
 
-A Python-based backup and recovery system built on Google Cloud Platform (GCP).
+This project demonstrates a Python-based automated backup and recovery system built using Google Cloud Platform (GCP).
 
-The project uses Cloud Storage for backup storage, Python for backup and recovery, Docker for containerization, Cloud Build for image creation, Artifact Registry for image storage, and Cloud Run Jobs for execution.
+The solution uses Google Cloud Storage to store backup files, Python to perform backup and recovery operations, Docker to containerize the application, Cloud Build to build container images, Artifact Registry to store images, and Cloud Run Jobs to execute backup tasks.
 
-Cloud Scheduler was tested as the automated trigger.
+Cloud Scheduler was configured and successfully tested to trigger Cloud Run Jobs automatically. The temporary Scheduler job was deleted after testing.
 
-## Architecture
+The project demonstrates cloud storage, containerization, IAM, automation, versioning, recovery, and centralized logging.
 
-![GCP Automated Backup Recovery Architecture](https://github.com/user-attachments/assets/74fda5cd-4aa2-4150-a560-1c1ebf1a0bdb)
+## 2. Architecture
+
+![GCP Automated Backup and Recovery Architecture](https://github.com/user-attachments/assets/74fda5cd-4aa2-4150-a560-1c1ebf1a0bdb)
+
+### Architecture Workflow
 
 Cloud Scheduler → Cloud Run Jobs API → Cloud Run Job → Docker Container → Python Backup Script → Cloud Storage → Cloud Logging
 
-## Technologies Used
+Recovery workflow:
 
-- Google Cloud Platform
-- Cloud Storage
-- Cloud Run Jobs
-- Cloud Scheduler
-- Artifact Registry
-- Cloud Build
-- Docker
-- Python 3.12
-- IAM
-- Cloud Logging
-- Git and GitHub
+Cloud Storage Object Versioning → Object Generation ID → restore.py → Recovered File
 
-## Project Implementation
+## 3. Technologies Used
 
-### 1. Cloud Storage
+| Category | Technology |
+|---|---|
+| Cloud Platform | Google Cloud Platform |
+| Object Storage | Cloud Storage |
+| Containerization | Docker |
+| Container Registry | Artifact Registry |
+| Container Build | Cloud Build |
+| Container Execution | Cloud Run Jobs |
+| Scheduling | Cloud Scheduler |
+| Programming | Python 3.12 |
+| Python Library | google-cloud-storage |
+| Identity and Access | IAM and Service Accounts |
+| Monitoring | Cloud Logging |
+| Version Control | Git and GitHub |
 
-- Created a bucket in `us-central1`.
-- Enabled Object Versioning.
-- Configured uniform bucket-level access.
-- Enabled public access prevention.
-- Configured backup object storage.
+## 4. GCP Project Configuration
 
-### 2. Python Backup Script
+| Configuration | Value |
+|---|---|
+| Region | us-central1 |
+| Zone | us-central1-a |
+| Artifact Registry | gcp-backup-repo |
+| Docker Image | backup-job:v1 |
+| Cloud Run Job | backup-job |
+| Cloud Scheduler | daily-backup-trigger |
+| Storage Bucket | project-04354dfd-b58a-4510-a66-backup |
+| Backup Object | sample.txt |
 
-- Used the Google Cloud Storage Python client library.
-- Generated timestamped backup content.
-- Uploaded backup objects to Cloud Storage.
-- Added Python logging for execution tracking.
-- Implemented exception handling.
+Replace project-specific values with your own when recreating the project.
 
-### 3. Docker Containerization
+## 5. Project Implementation
 
-- Created a Dockerfile.
-- Used Python 3.12-slim as the base image.
-- Installed dependencies using `requirements.txt`.
-- Packaged the backup script into a Docker image.
+### Step 1. Configure GCP Project
 
-### 4. Cloud Build and Artifact Registry
-
-- Built the Docker image using Cloud Build.
-- Created an Artifact Registry Docker repository.
-- Stored the image as `backup-job:v1`.
-
-### 5. Cloud Run Jobs
-
-- Created a Cloud Run Job named `backup-job`.
-- Configured a dedicated service account.
-- Granted Cloud Storage object permissions.
-- Executed the container successfully.
-- Verified backup uploads.
-
-### 6. Cloud Scheduler
-
-- Created an HTTP Scheduler job.
-- Configured OAuth authentication.
-- Used a dedicated Scheduler service account.
-- Connected Scheduler to the Cloud Run Jobs API.
-- Tested the scheduled execution successfully.
-- Deleted the temporary Scheduler after testing.
-
-See [CLOUD-SCHEDULER.md](CLOUD-SCHEDULER.md) for configuration commands and workflow.
-
-### 7. Cloud Logging
-
-- Used Python logging.
-- Inspected execution logs in Cloud Logging.
-- Verified backup start and successful upload messages.
-- Checked container exit status.
-
-### 8. Backup Recovery
-
-- Enabled Object Versioning.
-- Identified object generations.
-- Used `restore.py` to download an earlier object generation.
-- Verified file recovery.
-
-## How to Run
-
-### Install dependencies
+Set the active project:
 
 ```bash
-pip install -r requirements.txt
+gcloud config set project PROJECT_ID
 ```
 
-### Run the local backup script
+Check the active project:
 
 ```bash
-python3 backup.py
+gcloud config get-value project
 ```
 
-### Run the restore script
+Set the default region:
 
 ```bash
-python3 restore.py
+gcloud config set compute/region us-central1
 ```
 
-### List object versions
+### Step 2. Enable Required APIs
+
+```bash
+gcloud services enable storage.googleapis.com
+gcloud services enable run.googleapis.com
+gcloud services enable cloudscheduler.googleapis.com
+gcloud services enable cloudbuild.googleapis.com
+gcloud services enable artifactregistry.googleapis.com
+```
+
+### Step 3. Create Cloud Storage Bucket
+
+Create the bucket:
+
+```bash
+gcloud storage buckets create gs://BUCKET_NAME \
+  --location=us-central1 \
+  --default-storage-class=STANDARD \
+  --uniform-bucket-level-access
+```
+
+Enable public access prevention:
+
+```bash
+gcloud storage buckets update gs://BUCKET_NAME \
+  --public-access-prevention
+```
+
+Enable Object Versioning:
+
+```bash
+gcloud storage buckets update gs://BUCKET_NAME \
+  --versioning
+```
+
+Verify bucket configuration:
+
+```bash
+gcloud storage buckets describe gs://BUCKET_NAME
+```
+
+List stored objects:
+
+```bash
+gcloud storage ls gs://BUCKET_NAME
+```
+
+List all object generations:
 
 ```bash
 gcloud storage ls --all-versions gs://BUCKET_NAME/sample.txt
 ```
 
-### Execute the Cloud Run Job
+### Step 4. Develop Python Backup Script
+
+Install the required Python library:
 
 ```bash
-gcloud run jobs execute backup-job --region=us-central1 --wait
+pip install google-cloud-storage
 ```
 
-Replace `BUCKET_NAME` with your bucket name. Configure GCP authentication and IAM permissions before running the scripts.
+The backup script performs these operations:
 
-## Troubleshooting
+1. Initializes the Cloud Storage client.
+2. Connects to the destination bucket.
+3. Generates timestamped backup content.
+4. Uploads the file to Cloud Storage.
+5. Records execution details using Python logging.
+6. Handles exceptions during execution.
 
-| Issue | Troubleshooting |
+Run the local backup script:
+
+```bash
+python3 backup.py
+```
+
+### Step 5. Develop Python Recovery Script
+
+The recovery script downloads an earlier object generation using its generation ID.
+
+List object versions:
+
+```bash
+gcloud storage ls --all-versions gs://BUCKET_NAME/sample.txt
+```
+
+Use the required generation ID in `restore.py`.
+
+Run:
+
+```bash
+python3 restore.py
+```
+
+Verify the recovered file:
+
+```bash
+ls -l restored_sample.txt
+```
+
+### Step 6. Docker Containerization
+
+Create a Dockerfile using Python 3.12-slim.
+
+The Dockerfile:
+
+- Defines the base Python image.
+- Sets the application working directory.
+- Installs dependencies.
+- Copies the backup script.
+- Executes the Python application.
+
+Build a local Docker image:
+
+```bash
+docker build -t backup-job:v1 .
+```
+
+List Docker images:
+
+```bash
+docker images
+```
+
+### Step 7. Create Artifact Registry Repository
+
+Create a Docker repository:
+
+```bash
+gcloud artifacts repositories create gcp-backup-repo \
+  --repository-format=docker \
+  --location=us-central1 \
+  --description="GCP automated backup Docker images"
+```
+
+Configure Docker authentication:
+
+```bash
+gcloud auth configure-docker us-central1-docker.pkg.dev
+```
+
+Tag the image:
+
+```bash
+docker tag backup-job:v1 \
+  us-central1-docker.pkg.dev/PROJECT_ID/gcp-backup-repo/backup-job:v1
+```
+
+Push the image:
+
+```bash
+docker push us-central1-docker.pkg.dev/PROJECT_ID/gcp-backup-repo/backup-job:v1
+```
+
+List repository images:
+
+```bash
+gcloud artifacts docker images list \
+  us-central1-docker.pkg.dev/PROJECT_ID/gcp-backup-repo
+```
+
+### Step 8. Build Docker Image Using Cloud Build
+
+Cloud Build was used to build and push the container image.
+
+```bash
+gcloud builds submit \
+  --tag us-central1-docker.pkg.dev/PROJECT_ID/gcp-backup-repo/backup-job:v1
+```
+
+Check build history:
+
+```bash
+gcloud builds list --limit=10
+```
+
+### Step 9. Configure IAM and Service Accounts
+
+Create the Cloud Run Job service account:
+
+```bash
+gcloud iam service-accounts create backup-job-sa \
+  --display-name="Backup Job Service Account"
+```
+
+Grant Cloud Storage object permissions:
+
+```bash
+gcloud storage buckets add-iam-policy-binding gs://BUCKET_NAME \
+  --member="serviceAccount:backup-job-sa@PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/storage.objectUser"
+```
+
+The backup service account receives permissions to work with objects in the backup bucket.
+
+### Step 10. Create Cloud Run Job
+
+Deploy the container image as a Cloud Run Job:
+
+```bash
+gcloud run jobs create backup-job \
+  --image=us-central1-docker.pkg.dev/PROJECT_ID/gcp-backup-repo/backup-job:v1 \
+  --region=us-central1 \
+  --service-account=backup-job-sa@PROJECT_ID.iam.gserviceaccount.com \
+  --memory=512Mi \
+  --task-timeout=300s
+```
+
+Execute the Cloud Run Job:
+
+```bash
+gcloud run jobs execute backup-job \
+  --region=us-central1 \
+  --wait
+```
+
+List executions:
+
+```bash
+gcloud run jobs executions list \
+  --job=backup-job \
+  --region=us-central1
+```
+
+Describe the job:
+
+```bash
+gcloud run jobs describe backup-job \
+  --region=us-central1
+```
+
+### Step 11. Configure Cloud Scheduler
+
+Cloud Scheduler was configured to trigger the Cloud Run Job using an authenticated HTTP request.
+
+Enable the Scheduler API:
+
+```bash
+gcloud services enable cloudscheduler.googleapis.com
+```
+
+Create the Scheduler service account:
+
+```bash
+gcloud iam service-accounts create scheduler-invoker \
+  --display-name="Cloud Scheduler Invoker"
+```
+
+Grant Cloud Run invocation permission:
+
+```bash
+gcloud run jobs add-iam-policy-binding backup-job \
+  --region=us-central1 \
+  --member="serviceAccount:scheduler-invoker@PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/run.invoker"
+```
+
+Create the Scheduler job:
+
+```bash
+gcloud scheduler jobs create http daily-backup-trigger \
+  --location=us-central1 \
+  --schedule="10 16 * * *" \
+  --time-zone="Asia/Kolkata" \
+  --uri="https://us-central1-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/PROJECT_ID/jobs/backup-job:run" \
+  --http-method=POST \
+  --message-body="{}" \
+  --oauth-service-account="scheduler-invoker@PROJECT_ID.iam.gserviceaccount.com" \
+  --oauth-token-scope="https://www.googleapis.com/auth/cloud-platform"
+```
+
+Describe Scheduler configuration:
+
+```bash
+gcloud scheduler jobs describe daily-backup-trigger \
+  --location=us-central1
+```
+
+List Cloud Run executions:
+
+```bash
+gcloud run jobs executions list \
+  --job=backup-job \
+  --region=us-central1
+```
+
+The scheduled execution was successfully verified. The temporary Scheduler job was subsequently deleted.
+
+```bash
+gcloud scheduler jobs delete daily-backup-trigger \
+  --location=us-central1
+```
+
+See [CLOUD-SCHEDULER.md](CLOUD-SCHEDULER.md) for the complete Scheduler configuration and workflow.
+
+### Step 12. Cloud Logging
+
+Cloud Run container logs are collected in Cloud Logging.
+
+Check logs:
+
+```bash
+gcloud logging read \
+  'resource.type="cloud_run_job" AND resource.labels.job_name="backup-job"' \
+  --project=PROJECT_ID \
+  --limit=20 \
+  --freshness=2h
+```
+
+Verify messages such as:
+
+```text
+Backup started
+Backup uploaded successfully
+Bucket: BUCKET_NAME
+Object: sample.txt
+```
+
+Check execution status:
+
+```bash
+gcloud run jobs executions list \
+  --job=backup-job \
+  --region=us-central1
+```
+
+## 6. Backup and Recovery Workflow
+
+### Backup workflow
+
+1. Python generates timestamped backup content.
+2. Cloud Run Job starts the Docker container.
+3. The container executes backup.py.
+4. The Python script connects to Cloud Storage.
+5. The script uploads sample.txt.
+6. Object Versioning preserves previous generations.
+7. Cloud Logging records execution details.
+
+### Recovery workflow
+
+1. List all versions of the backup object.
+2. Identify the required generation ID.
+3. Configure the generation ID in restore.py.
+4. Execute the recovery script.
+5. Download the selected version.
+6. Verify the recovered file.
+
+## 7. Troubleshooting
+
+| Problem | Resolution |
 |---|---|
-| Permission denied during upload | Check the backup service account's bucket IAM permissions |
-| Cloud Run Job fails | Inspect execution status and Cloud Logging |
-| Scheduler cannot invoke Cloud Run | Check `roles/run.invoker` |
-| Restore fails | Verify the object generation ID |
-| Docker build fails | Check Dockerfile, dependencies and Cloud Build permissions |
+| Authentication failure | Check active gcloud account and credentials |
+| Permission denied during upload | Check bucket IAM permissions |
+| Cloud Build staging bucket error | Check Cloud Build service account permissions |
+| Artifact Registry push failure | Check Artifact Registry Writer permission |
+| Cloud Run execution failure | Inspect job execution details and logs |
+| Scheduler invocation failure | Check OAuth identity and roles/run.invoker |
+| Restore failure | Verify the object generation ID |
+| Missing logs | Check Cloud Logging resource type and time range |
 
-## Repository Structure
+## 8. Repository Structure
 
 ```text
 01-backup-recovery/
+│
 ├── backup.py
 ├── restore.py
 ├── requirements.txt
 ├── Dockerfile
 ├── README.md
 ├── CLOUD-SCHEDULER.md
+│
 ├── docs/
 │   ├── architecture-automated.png
 │   └── architecture-recovery.png
+│
 └── screenshots/
     ├── 01-storage-bucket.png
     ├── 02-backup-upload.png
@@ -161,24 +464,37 @@ Replace `BUCKET_NAME` with your bucket name. Configure GCP authentication and IA
     ├── 09-cloud-run-job-success.png
     ├── 10-cloud-scheduler-success.png
     ├── 11-cloud-logging.png
-    └── 12-backup-object-metadata.png
 ```
 
-## What I Learned
+## 9. What I Learned
 
-- Configuring Cloud Storage Object Versioning and recovering earlier object generations.
-- Building Docker images with Cloud Build.
-- Storing and managing container images in Artifact Registry.
-- Executing containerized Python workloads using Cloud Run Jobs.
-- Configuring IAM permissions for separate service accounts.
-- Connecting Cloud Scheduler to the Cloud Run Jobs API.
-- Troubleshooting Cloud Build permissions and Cloud Run execution.
-- Monitoring backup operations through Cloud Logging.
-- Understanding how object generations support recovery.
+- Creating and configuring GCP resources.
+- Working with Cloud Storage buckets and Object Versioning.
+- Using Python for cloud storage automation.
+- Building Docker images for cloud workloads.
+- Building and publishing images using Cloud Build and Artifact Registry.
+- Deploying containerized workloads using Cloud Run Jobs.
+- Configuring dedicated service accounts and least-privilege IAM permissions.
+- Connecting Cloud Scheduler with the Cloud Run Jobs API.
+- Troubleshooting IAM permission errors during Cloud Build and deployment.
+- Recovering previous object generations using Python.
+- Monitoring container execution through Cloud Logging.
 
-## Project Outcome
+## 10. Project Outcome
 
-Built and tested a containerized Python backup application using GCP services. Verified backup execution, Cloud Storage uploads, object versioning, recovery, scheduled triggering and centralized logging.
+Built and tested a containerized Python backup and recovery application on Google Cloud Platform.
+
+Successfully verified:
+- Python backup uploads to Cloud Storage.
+- Cloud Storage Object Versioning.
+- Recovery using object generation IDs.
+- Docker image creation and publishing.
+- Cloud Run Job execution.
+- Cloud Scheduler triggering.
+- IAM-based service account permissions.
+- Centralized execution logs through Cloud Logging.
+
+Cloud Scheduler was removed after successful testing. The project source code and configuration documentation are retained in GitHub.
 
 ## Author
 
