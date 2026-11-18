@@ -1,0 +1,5 @@
+backup.log
+sample.txt
+restored_sample.txt
+__pycache__/
+.venv/

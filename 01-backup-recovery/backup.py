@@ -1,26 +1,30 @@
-
+import logging
 from google.cloud import storage
 
-# 1. Connect to Google Cloud
-client = storage.Client()
+# Configure logging
+logging.basicConfig(
+    filename="backup.log",
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
-# 2. Enter your bucket name
-BUCKET_NAME = "YOUR_BUCKET_NAME"
+try:
+    client = storage.Client()
 
-# 3. Select the local file
-FILE_PATH = "sample.txt"
+    BUCKET_NAME = "project-04354dfd-b58a-4510-a66-backup"
+    FILE_PATH = "sample.txt"
+    DESTINATION_NAME = "sample.txt"
 
-# 4. Select the name for the uploaded file
-DESTINATION_NAME = "sample.txt"
+    bucket = client.bucket(BUCKET_NAME)
+    blob = bucket.blob(DESTINATION_NAME)
 
-# 5. Get the Cloud Storage bucket
-bucket = client.bucket(BUCKET_NAME)
+    logging.info("Backup started")
 
-# 6. Create an object reference
-blob = bucket.blob(DESTINATION_NAME)
+    blob.upload_from_filename(FILE_PATH)
 
-# 7. Upload the file
-blob.upload_from_filename(FILE_PATH)
+    logging.info("Backup uploaded successfully")
+    print("Backup uploaded successfully!")
 
-print("Backup uploaded successfully!")
-
+except Exception as error:
+    logging.exception("Backup failed")
+    print("Backup failed:", error)
