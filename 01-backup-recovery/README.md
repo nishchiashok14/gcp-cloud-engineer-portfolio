@@ -11,17 +11,22 @@ It uploads files to a GCP bucket, preserves previous file versions through Objec
 
 Local File
     |
+    |
     v
 Python Backup Script
+    |
     |
     v
 Google Cloud Storage Bucket
     |
+    |
     v
 Object Versioning
     |
+    |
     v
 Python Restore Script
+    |
     |
     v
 Recovered Local File
