@@ -10,6 +10,7 @@ It uploads files to a GCP bucket, preserves previous file versions through Objec
 ## 2. Architecture
 
 Local File --> Python Backup Script --> Google Cloud Storage Bucket --> Object Versioning --> Python Restore Script --> Recovered Local File
+<img width="1752" height="897" alt="GCP Automated Backup and Recovery Architecture" src="https://github.com/user-attachments/assets/8f50161a-3cfe-4b09-b991-686ef98a36ea" />
 
 ## 3. Technologies Used
 
